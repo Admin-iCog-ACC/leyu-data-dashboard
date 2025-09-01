@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
 
 // Types for the microtask assignment
 interface MicrotaskAssignment {
@@ -20,6 +22,31 @@ interface MicrotaskAssignment {
 }
 
 export default function MicrotaskAssignmentsPage() {
+  // State for total duration hours
+  const [totalDurationHours, setTotalDurationHours] = useState<number | null>(
+    null
+  );
+  // Fetch total duration hours
+  const fetchTotalDuration = async () => {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/microtask-assignments/duration-sum`,
+        {
+          method: "GET",
+          headers: {
+            accept: "application/json",
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const result = await response.json();
+      setTotalDurationHours(result.total_duration_hours ?? null);
+    } catch (error) {
+      setTotalDurationHours(null);
+    }
+  };
   // Pagination state
   const [assignments, setAssignments] = useState<MicrotaskAssignment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -57,6 +84,7 @@ export default function MicrotaskAssignmentsPage() {
 
   useEffect(() => {
     fetchAssignments();
+    fetchTotalDuration();
   }, []);
 
   // Pagination logic
@@ -83,6 +111,19 @@ export default function MicrotaskAssignmentsPage() {
         </Link>
       </div>
       <h1 className="text-3xl font-bold mb-6">Microtask Assignments</h1>
+      {/* Card for total duration hours */}
+      <Card className="mb-6 max-w-md mx-auto">
+        <CardHeader>
+          <CardTitle>Total Duration (hours)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {totalDurationHours !== null ? (
+            <span className="text-2xl font-bold">{totalDurationHours}</span>
+          ) : (
+            <span className="text-muted-foreground">Loading...</span>
+          )}
+        </CardContent>
+      </Card>
       {loading ? (
         <div className="flex items-center justify-center py-10">
           <Loader2 className="h-8 w-8 animate-spin" />

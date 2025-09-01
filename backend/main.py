@@ -1,3 +1,5 @@
+# API to get the sum of all microtask-assignments durations in hours
+
 
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,7 +15,7 @@ app = FastAPI()
 # Allow CORS for localhost:3000
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3001"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
@@ -87,5 +89,26 @@ def get_microtask_assignments():
                     "files": files
                 })
         return {"output": output}
+    finally:
+        session.close()
+
+@app.get("/microtask-assignments/duration-sum")
+def get_microtask_assignments_duration_sum():
+    session = SessionLocal()
+    total_duration = 0.0
+    try:
+        assignments = session.query(MicrotaskAssignment).order_by(MicrotaskAssignment.created_at.desc()).all()
+        for a in assignments:
+            output_value = getattr(a, "output", None)
+            if output_value and isinstance(output_value, dict):
+                data_dict = output_value.get("data")
+                if data_dict and isinstance(data_dict, dict):
+                    duration = data_dict.get("duration")
+                    if duration is not None:
+                        try:
+                            total_duration += float(duration)
+                        except (ValueError, TypeError):
+                            pass
+        return {"total_duration_hours": total_duration / 3600}
     finally:
         session.close()
