@@ -109,6 +109,6 @@ def get_microtask_assignments_duration_sum():
                             total_duration += float(duration)
                         except (ValueError, TypeError):
                             pass
-        return {"total_duration_hours": total_duration / 3600}
+        return {"total_duration_hours": total_duration / 3600000}
     finally:
         session.close()
