@@ -1,17 +1,22 @@
+# Use official Python image as base
+FROM python:3.11-slim
 
-FROM python:3.9
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
+# Set working directory
+WORKDIR /app
 
-WORKDIR /code
+# Install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy project files
+COPY . .
 
-COPY ./requirements.txt /code/requirements.txt
+# Expose port (FastAPI default: 8000)
+EXPOSE 8000
 
-
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
-
-
-COPY ./app /code/app
-
-
+# Run FastAPI with Uvicorn
 CMD ["fastapi", "run", "app/main.py", "--port", "8000"]
