@@ -1,8 +1,19 @@
-# Database Environment Setup
 
-This project uses a PostgreSQL database. You can configure the database connection using environment variables, typically set in a `.env` file.
+# FastAPI Docker Setup
 
-## Required Environment Variables
+This project uses FastAPI and Docker for deployment. The API runs on port 8000 by default.
+
+## Running with Docker Compose
+
+1. Build and start the service:
+	```pwsh
+	docker-compose up --build
+	```
+
+2. Access the API at: [http://localhost:8000](http://localhost:8000)
+	- Interactive docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+## Environment Variables
 
 Create a `.env` file in your project root with the following variables:
 
