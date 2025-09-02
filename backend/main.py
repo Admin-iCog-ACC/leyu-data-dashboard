@@ -1,5 +1,4 @@
-# API to get the sum of all microtask-assignments durations in hours
-
+# API to get the sum of 'count' for all datapoints (with optional filtering)
 
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -55,6 +54,24 @@ def get_datapoints_with_count(
     session.close()
     return result
 
+@app.get("/datapoints-with-count/sum")
+def get_datapoints_with_count_sum(
+    accepted: int = Query(None, description="Filter by accepted value (0 or 1)")
+):
+    session: Session = SessionLocal()
+    try:
+        query = session.query(DatapointWithCount)
+        if accepted is not None:
+            query = query.filter(DatapointWithCount.accepted == accepted)
+        total_count = 0
+        for row in query:
+            total_count += getattr(row, "count", 0)
+        return {"total_count": total_count}
+    finally:
+        session.close()
+# API to get the sum of all microtask-assignments durations in hours
+
+
 
 # New endpoint to fetch only the required fields in the specified format
 
@@ -109,6 +126,6 @@ def get_microtask_assignments_duration_sum():
                             total_duration += float(duration)
                         except (ValueError, TypeError):
                             pass
-        return {"total_duration_hours": total_duration / 3600000}
+        return {"total_duration_hours": total_duration / 3600000 }
     finally:
         session.close()

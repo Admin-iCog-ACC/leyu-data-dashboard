@@ -15,9 +15,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { RefreshCw, Loader2, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 // API base URL - loaded from environment variable (see .env.local)
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
 
 export default function DatapointsPage() {
   const [data, setData] = useState<Datapoint[]>([]);
@@ -25,6 +27,12 @@ export default function DatapointsPage() {
   const [syncing, setSyncing] = useState(false);
   const [pageSize, setPageSize] = useState(100); // Default to first 100 items
   const [totalCount, setTotalCount] = useState(0);
+  const [totalSumData, setTotalSumData] = useState<{
+    total_count: number;
+  } | null>(null);
+  const [acceptedSumData, setAcceptedSumData] = useState<{
+    total_count: number;
+  } | null>(null);
 
   // Handle page size change
   const handlePageSizeChange = (newPageSize: number) => {
@@ -177,8 +185,68 @@ export default function DatapointsPage() {
     }
   };
 
+  // Fetch total sum data (accepted=0)
+  const fetchTotalSum = async () => {
+    try {
+      console.log(
+        "🔄 Fetching total sum from:",
+        `${API_BASE_URL}/datapoints-with-count/sum?accepted=0`
+      );
+      const response = await fetch(
+        `${API_BASE_URL}/datapoints-with-count/sum?accepted=0`,
+        {
+          method: "GET",
+          headers: {
+            accept: "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("✅ Total sum fetched successfully:", data);
+        setTotalSumData(data);
+      } else {
+        console.error("❌ Total sum API Error Response:", response.status);
+      }
+    } catch (error) {
+      console.error("❌ Error fetching total sum:", error);
+    }
+  };
+
+  // Fetch accepted sum data
+  const fetchAcceptedSum = async () => {
+    try {
+      console.log(
+        "🔄 Fetching accepted sum from:",
+        `${API_BASE_URL}/datapoints-with-count/sum?accepted=1`
+      );
+      const response = await fetch(
+        `${API_BASE_URL}/datapoints-with-count/sum?accepted=1`,
+        {
+          method: "GET",
+          headers: {
+            accept: "application/json",
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("✅ Accepted sum fetched successfully:", data);
+        setAcceptedSumData(data);
+      } else {
+        console.error("❌ Accepted sum API Error Response:", response.status);
+      }
+    } catch (error) {
+      console.error("❌ Error fetching accepted sum:", error);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchTotalSum();
+    fetchAcceptedSum();
   }, [pageSize]);
 
   return (
@@ -236,6 +304,38 @@ export default function DatapointsPage() {
             </Button>
           </div>
         </div>
+      </div>
+
+      <div className="mb-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Data Summary</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold mb-2">Total Count:</h4>
+                {totalSumData ? (
+                  <div className="text-2xl font-bold text-primary">
+                    {totalSumData.total_count.toLocaleString()}
+                  </div>
+                ) : (
+                  <p>Loading total count...</p>
+                )}
+              </div>
+              <div>
+                <h4 className="font-semibold mb-2">Total Accepted Count:</h4>
+                {acceptedSumData ? (
+                  <div className="text-2xl font-bold text-green-600">
+                    {acceptedSumData.total_count.toLocaleString()}
+                  </div>
+                ) : (
+                  <p>Loading accepted count...</p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {loading ? (
